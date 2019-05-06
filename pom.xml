@@ -28,18 +28,18 @@
 			<version>5.0.0</version>
 		</dependency>
 
-<!--		<dependency>-->
-<!--			<groupId>fr.inria.corese</groupId>-->
-<!--			<artifactId>corese-core</artifactId>-->
-<!--			<version>4.1.1</version>-->
-<!--			<classifier>jar-with-dependencies</classifier>-->
-<!--			<exclusions>-->
-<!--				<exclusion>  &lt;!&ndash; declare the exclusion here &ndash;&gt;-->
-<!--					<groupId>com.ibm.icu</groupId>-->
-<!--					<artifactId>icu4j</artifactId>-->
-<!--				</exclusion>-->
-<!--			</exclusions>-->
-<!--		</dependency>-->
+		<dependency>
+			<groupId>fr.inria.corese</groupId>
+			<artifactId>corese-core</artifactId>
+			<version>4.1.1</version>
+			<classifier>jar-with-dependencies</classifier>
+			<exclusions>
+				<exclusion>  <!-- declare the exclusion here -->
+					<groupId>com.ibm.icu</groupId>
+					<artifactId>icu4j</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 <!--		<dependency>-->
 <!--			<groupId>org.slf4j</groupId>-->
 <!--			<artifactId>slf4j-api</artifactId>-->
@@ -81,14 +81,27 @@
 				<configuration>
 					<instructions>
 						<_noee>true</_noee>
-					<Bundle-Activator>org.protege.editor.owl.ProtegeOWL</Bundle-Activator>
-					<Bundle-ClassPath>.</Bundle-ClassPath>
-					<Bundle-SymbolicName>${project.artifactId};singleton:=true</Bundle-SymbolicName>
-					<Bundle-Vendor>The Wimmics Team</Bundle-Vendor>
-					<Import-Package>
-						org.protege.editor.owl.*;version="5.0.0", <!-- equivalent to [5.0.0,infinity) -->
-						*
-					</Import-Package>
+						<Bundle-Activator>org.protege.editor.owl.ProtegeOWL</Bundle-Activator>
+						<Bundle-ClassPath>.</Bundle-ClassPath>
+						<Bundle-SymbolicName>${project.artifactId};singleton:=true</Bundle-SymbolicName>
+						<Bundle-Vendor>The Wimmics Team</Bundle-Vendor>
+						<Import-Package>
+							org.protege.editor.owl.*;version="5.0.0", <!-- equivalent to [5.0.0,infinity) -->
+							javax.swing.*,
+							org.semanticweb.*,
+							!com.conversantmedia.*,
+							!com.fasterxml.*,
+							!com.lmax.*,
+							!com.sun.jdi.*,
+							!com.sun.tools.*,
+							!javax.jms.*,
+							!javax.mail.*,
+							!javax.*,
+							!net.*,
+							!org.apache.*,
+							!*
+						</Import-Package>
+						<Embed-Dependency>corese-core;inline=true</Embed-Dependency>
 <!--					<Embed-Dependency>*;scope=compile,runtime</Embed-Dependency>-->
 <!--                        <Embed-Transitive>true</Embed-Transitive>-->
 					</instructions>
