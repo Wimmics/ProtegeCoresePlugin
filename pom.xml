@@ -89,6 +89,8 @@
 							org.protege.editor.owl.*;version="5.0.0", <!-- equivalent to [5.0.0,infinity) -->
 							javax.swing.*,
 							org.semanticweb.*,
+							org.xml.*,
+							javax.xml.*,
 							!com.conversantmedia.*,
 							!com.fasterxml.*,
 							!com.lmax.*,

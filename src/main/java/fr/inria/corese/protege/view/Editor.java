@@ -6,12 +6,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 
-//import fr.inria.corese.core.Graph;
-//import fr.inria.corese.core.load.Load;
-//import fr.inria.corese.core.print.ResultFormat;
-//import fr.inria.corese.core.query.QueryProcess;
-//import fr.inria.corese.kgram.core.Mappings;
-//import fr.inria.corese.sparql.exceptions.EngineException;
+import fr.inria.corese.core.Graph;
+import fr.inria.corese.core.load.Load;
+import fr.inria.corese.core.print.ResultFormat;
+import fr.inria.corese.core.query.QueryProcess;
+import fr.inria.corese.kgram.core.Mappings;
+import fr.inria.corese.sparql.exceptions.EngineException;
 import org.protege.editor.owl.model.OWLModelManager;
 import org.protege.editor.owl.model.event.EventType;
 import org.protege.editor.owl.model.event.OWLModelManagerListener;
@@ -51,9 +51,9 @@ public class Editor extends JPanel {
         textArea.setLineWrap(true);
         textArea.setWrapStyleWord(true);
 
-        add(textComponent);
         add(textArea);
         add(evaluateRequest);
+        add(textComponent);
     }
     
     public void dispose() {
@@ -72,18 +72,18 @@ public class Editor extends JPanel {
         }
 
         String sparqlRequest = textArea.getText();
-//        Graph graph = Graph.create();
-//        Load ld = Load.create(graph);
-//        ld.load(fileName);
-//        QueryProcess exec = QueryProcess.create(graph);
-//        String query = "select * where {?x ?p ?y}";
-//        Mappings map = null;
-//        try {
-//            map = exec.query(query);
-//        } catch (EngineException e) {
-//            e.printStackTrace();
-//        }
-//        ResultFormat f1 = ResultFormat.create(map);
-        textComponent.setText("Result = ");
+        Graph graph = Graph.create();
+        Load ld = Load.create(graph);
+        ld.load(fileName);
+        QueryProcess exec = QueryProcess.create(graph);
+        String query = "select * where {?x ?p ?y}";
+        Mappings map = null;
+        try {
+            map = exec.query(query);
+        } catch (EngineException e) {
+            e.printStackTrace();
+        }
+        ResultFormat f1 = ResultFormat.create(map);
+        textComponent.setText("Result = "+f1);
     }
 }
