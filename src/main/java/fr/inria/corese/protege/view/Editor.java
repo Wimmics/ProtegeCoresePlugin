@@ -1,5 +1,17 @@
 package fr.inria.corese.protege.view;
 
+import java.awt.*;
+import java.awt.event.ActionListener;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+
+//import fr.inria.corese.core.Graph;
+//import fr.inria.corese.core.load.Load;
+//import fr.inria.corese.core.print.ResultFormat;
+//import fr.inria.corese.core.query.QueryProcess;
+//import fr.inria.corese.kgram.core.Mappings;
+//import fr.inria.corese.sparql.exceptions.EngineException;
 import org.protege.editor.owl.model.OWLModelManager;
 import org.protege.editor.owl.model.event.EventType;
 import org.protege.editor.owl.model.event.OWLModelManagerListener;
@@ -8,17 +20,7 @@ import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionListener;
-import java.io.FileOutputStream;
-import java.io.IOException;
 
-//import fr.inria.corese.core.Graph;
-//import fr.inria.corese.core.load.Load;
-//import fr.inria.corese.core.print.ResultFormat;
-//import fr.inria.corese.core.query.QueryProcess;
-//import fr.inria.corese.kgram.core.Mappings;
-//import fr.inria.corese.sparql.exceptions.EngineException;
 
 public class Editor extends JPanel {
     private JTextArea textArea;
@@ -31,13 +33,13 @@ public class Editor extends JPanel {
 
 
     private ActionListener refreshAction = e -> recalculate();
-    
+
     private OWLModelManagerListener modelListener = event -> {
         if (event.getType() == EventType.ACTIVE_ONTOLOGY_CHANGED) {
             recalculate();
         }
     };
-    
+
     public Editor(OWLModelManager modelManager) {
     	this.modelManager = modelManager;
 
@@ -48,7 +50,7 @@ public class Editor extends JPanel {
         textArea.setFont(new Font("Serif", Font.ITALIC, 16));
         textArea.setLineWrap(true);
         textArea.setWrapStyleWord(true);
-        
+
         add(textComponent);
         add(textArea);
         add(evaluateRequest);

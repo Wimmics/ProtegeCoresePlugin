@@ -1,10 +1,9 @@
 package fr.inria.corese.protege.view;
 
+import java.awt.BorderLayout;
 import org.protege.editor.owl.ui.view.AbstractOWLViewComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.awt.*;
 
 public class CoreseView extends AbstractOWLViewComponent {
 

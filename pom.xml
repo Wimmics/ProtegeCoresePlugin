@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	
+
 	<groupId>fr.inria.corese</groupId>
 	<artifactId>corese.plugin</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
@@ -9,17 +10,46 @@
 
 	<name>Corese for Protégé</name>
 	<description>Plugin embedding the Corese Semantic Web Engine in Protégé.</description>
-	
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<slf4j.version>1.7.12</slf4j.version>
 	</properties>
-  	
+
 	<dependencies>
-        <dependency>
+<!--		<dependency>-->
+<!--			<groupId>edu.stanford.protege</groupId>-->
+<!--			<artifactId>protege-editor-core</artifactId>-->
+<!--			<version>5.0.0</version>-->
+<!--		</dependency>-->
+		<dependency>
 			<groupId>edu.stanford.protege</groupId>
-            <artifactId>protege-editor-owl</artifactId>
+			<artifactId>protege-editor-owl</artifactId>
 			<version>5.0.0</version>
-        </dependency>
+		</dependency>
+
+<!--		<dependency>-->
+<!--			<groupId>fr.inria.corese</groupId>-->
+<!--			<artifactId>corese-core</artifactId>-->
+<!--			<version>4.1.1</version>-->
+<!--			<classifier>jar-with-dependencies</classifier>-->
+<!--			<exclusions>-->
+<!--				<exclusion>  &lt;!&ndash; declare the exclusion here &ndash;&gt;-->
+<!--					<groupId>com.ibm.icu</groupId>-->
+<!--					<artifactId>icu4j</artifactId>-->
+<!--				</exclusion>-->
+<!--			</exclusions>-->
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>org.slf4j</groupId>-->
+<!--			<artifactId>slf4j-api</artifactId>-->
+<!--			<version>${slf4j.version}</version>-->
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>org.slf4j</groupId>-->
+<!--			<artifactId>slf4j-simple</artifactId>-->
+<!--			<version>${slf4j.version}</version>-->
+<!--		</dependency>-->
 	</dependencies>
 
 	<build>
@@ -36,35 +66,38 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.7.0</version>
+				<version>3.3</version>
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
 				</configuration>
 			</plugin>
-            
-            <plugin>
+
+			<plugin>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>maven-bundle-plugin</artifactId>
-				<version>4.2.0</version>
+				<version>3.0.0</version>
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<Bundle-Activator>org.protege.editor.owl.ProtegeOWL</Bundle-Activator>
-						<Bundle-ClassPath>.</Bundle-ClassPath>
-						<Bundle-SymbolicName>${project.artifactId};singleton:=true</Bundle-SymbolicName>
-						<Bundle-Vendor>The Protege Development Team</Bundle-Vendor>
-						<Import-Package>
-							org.protege.editor.owl.*;version="5.0.0", <!-- equivalent to [5.0.0,infinity) -->
-							*
-						</Import-Package>
+						<_noee>true</_noee>
+					<Bundle-Activator>org.protege.editor.owl.ProtegeOWL</Bundle-Activator>
+					<Bundle-ClassPath>.</Bundle-ClassPath>
+					<Bundle-SymbolicName>${project.artifactId};singleton:=true</Bundle-SymbolicName>
+					<Bundle-Vendor>The Wimmics Team</Bundle-Vendor>
+					<Import-Package>
+						org.protege.editor.owl.*;version="5.0.0", <!-- equivalent to [5.0.0,infinity) -->
+						*
+					</Import-Package>
+<!--					<Embed-Dependency>*;scope=compile,runtime</Embed-Dependency>-->
+<!--                        <Embed-Transitive>true</Embed-Transitive>-->
 					</instructions>
 				</configuration>
-            </plugin>
-            
+			</plugin>
+
 			<plugin>
 				<artifactId>maven-eclipse-plugin</artifactId>
-				<version>2.10</version>
+				<version>2.9</version>
 				<configuration>
 					<pde>true</pde>
 				</configuration>
