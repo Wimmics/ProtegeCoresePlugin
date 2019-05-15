@@ -6,6 +6,6 @@
 		<label value="Corese SPARQL Request" />
 		<class value="fr.inria.corese.protege.view.CoreseView" />
 		<headerColor value="@org.protege.ontologycolor"/>
-		<category value="@org.protege.ontologycategory" />
+		<category value="@org.protege.querycategory" />
 	</extension>
 </plugin>
