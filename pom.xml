@@ -46,6 +46,21 @@
 			<artifactId>xml-apis</artifactId>
 			<version>1.4.01</version>
 		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>1.2.3</version>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-core</artifactId>
+			<version>1.2.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.26</version>
+		</dependency>
 <!--&lt;!&ndash;		<dependency>&ndash;&gt;-->
 <!--			<groupId>org.slf4j</groupId>-->
 <!--			<artifactId>slf4j-api</artifactId>-->
@@ -124,6 +139,9 @@
 							org.w3c.dom.*,
 							org.w3c.*,
 							javax.xml.*,
+							ch.qos.*,
+							javax.naming,
+							javax.management.*,
 							!com.conversantmedia.*,
 							!com.fasterxml.*,
 							!com.lmax.*,
@@ -134,10 +152,9 @@
 							!javax.*,
 							!net.*,
 							!org.apache.*,
-							!org.slf4j.ext.*,
 							!*
 						</Import-Package>
-						<Embed-Dependency>corese-gui,xml-apis;inline=true</Embed-Dependency>
+						<Embed-Dependency>slf4j-api,logback-core,corese-gui,xml-apis;inline=true</Embed-Dependency>
 					</instructions>
 				</configuration>
 			</plugin>
