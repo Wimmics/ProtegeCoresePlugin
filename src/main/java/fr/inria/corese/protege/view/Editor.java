@@ -13,12 +13,13 @@ import fr.inria.corese.core.load.Load;
 import fr.inria.corese.core.load.LoadException;
 import fr.inria.corese.core.print.ResultFormat;
 import fr.inria.corese.core.query.QueryProcess;
+import fr.inria.corese.gui.query.SparqlQueryEditor;
 import fr.inria.corese.kgram.core.Mappings;
+import fr.inria.corese.protege.mappingsviewer.TableViewer;
 import fr.inria.corese.sparql.exceptions.EngineException;
 import org.protege.editor.owl.model.OWLModelManager;
 import org.protege.editor.owl.model.event.EventType;
 import org.protege.editor.owl.model.event.OWLModelManagerListener;
-import org.semanticweb.owlapi.formats.RDFXMLDocumentFormat;
 import org.semanticweb.owlapi.formats.TurtleDocumentFormat;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;
@@ -29,7 +30,9 @@ import static java.awt.BorderLayout.*;
 
 
 public class Editor extends JPanel {
-    private JTextArea requestArea;
+    private final JTabbedPane tabbedPaneResults;
+    private final TableViewer tableResults;
+    private SparqlQueryEditor requestArea;
 
     private JTextArea constraintsArea;
 
@@ -54,30 +57,19 @@ public class Editor extends JPanel {
         modelManager.addListener(modelListener);
         evaluateRequest.addActionListener(refreshAction);
 
-        requestArea = new JTextArea(20,80);
-        requestArea.setText("# shape for shape\n" +
-                "select *\n" +
-                "where {\n" +
-                "   #bind (xt:transformer(st:ds, true) as ?d)\n" +
-                "   bind (xt:shapeGraph() as ?g)\n" +
-                "   bind (xt:turtle(?g) as ?t)\n" +
-                "}" );
+        requestArea = new SparqlQueryEditor();
+        requestArea.setQueryText("select * where {" +
+                "  ?s ?p ?o" +
+                "}");
+//        requestArea.setQueryText("# shape for shape\n" +
+//                "select *\n" +
+//                "where {\n" +
+//                "   #bind (xt:transformer(st:ds, true) as ?d)\n" +
+//                "   bind (xt:shapeGraph() as ?g)\n" +
+//                "   bind (xt:turtle(?g) as ?t)\n" +
+//                "}" );
         requestArea.setFont(new Font("Serif", Font.ITALIC, 16));
-        requestArea.setLineWrap(true);
-        requestArea.setWrapStyleWord(true);
-
-//        constraintsArea = new JTextArea("@prefix sh: <http://www.w3.org/ns/shacl#> .\n" +
-//                "@prefix us: <http://www.corese.inria.fr/user#> .\n" +
-//                "@prefix foaf: <http://xmlns.com/foaf/0.1/> .\n" +
-//                "\n" +
-//                "us:test a sh:NodeShape ;\n" +
-//                "sh:targetClass foaf:Person ;\n" +
-//                "sh:property [\n" +
-//                "    sh:path foaf:knows;\n" +
-//                "    sh:minCount 1;\n" +
-//                "    sh:class foaf:Person\n" +
-//                "] .");
-        constraintsArea = new JTextArea(20,80);
+        constraintsArea = new JTextArea(10,80);
         constraintsArea.setText("@prefix pizza: <http://www.co-ode.org/ontologies/pizza/pizza.owl#> .\n"+
                 "@prefix sh: <http://www.w3.org/ns/shacl#> .\n" +
                 "@prefix us: <http://www.corese.inria.fr/user#> .\n" +
@@ -97,7 +89,15 @@ public class Editor extends JPanel {
         add(new JScrollPane(requestArea), NORTH);
         add(new JScrollPane(constraintsArea), CENTER);
         add(new JScrollPane(evaluateRequest), SOUTH);
-        add(new JScrollPane(resultComponent), SOUTH);
+
+        tabbedPaneResults = new JTabbedPane();
+        tabbedPaneResults.add("Raw Results", new JScrollPane(resultComponent));
+        tableResults = new TableViewer();
+        JScrollPane tableScroll = new JScrollPane();
+        tableScroll.setViewportView(tableResults);
+        tabbedPaneResults.add("Table Results", tableScroll);
+
+        add(tabbedPaneResults, SOUTH);
     }
 
     public void dispose() {
@@ -137,7 +137,7 @@ public class Editor extends JPanel {
             e.printStackTrace();
         }
         QueryProcess exec = QueryProcess.create(graph);
-        String query = requestArea.getText();
+        String query = requestArea.getTextPaneQuery().getText();
         Mappings map = null;
         try {
             map = exec.query(query);
@@ -146,6 +146,9 @@ public class Editor extends JPanel {
         }
         ResultFormat f1 = ResultFormat.create(map);
         System.err.println("Result = "+f1);
+        tableResults.setMappings(map);
+        tableResults.updateModel();
+        tableResults.invalidate();
         resultComponent.setText("Result = \n" + f1);
     }
 }
