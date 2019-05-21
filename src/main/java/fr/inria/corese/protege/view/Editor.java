@@ -58,17 +58,16 @@ public class Editor extends JPanel {
         JComponent editorPanel = createRequestEditorPanel();
         JComponent constraintsPanel = createConstraintsPanel();
 
+        JSplitPane upperPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        upperPanel.add(editorPanel);
+        upperPanel.add(constraintsPanel);
+        add(upperPanel);
 
-        setLayout(new GridLayout(4, 1));
-
-//        add(requestScrollPane);
-//        add(new JScrollPane(constraintsArea));
-        add(editorPanel);
-        add(constraintsPanel);
-
+        JPanel lowerPanel = new JPanel();
+        lowerPanel.setLayout(new BorderLayout());
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(evaluateRequestButton, CENTER);
-        add(buttonPanel);
+        lowerPanel.add(buttonPanel, NORTH);
 
         tabbedPaneResults = new JTabbedPane();
         tabbedPaneResults.add("Raw Results", new JScrollPane(resultComponent));
@@ -76,7 +75,12 @@ public class Editor extends JPanel {
         JScrollPane tableScroll = new JScrollPane();
         tableScroll.setViewportView(tableResults);
         tabbedPaneResults.add("Table Results", tableScroll);
-        add(tabbedPaneResults);
+        lowerPanel.add(tabbedPaneResults, CENTER);
+
+        JSplitPane fullPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        fullPanel.add(upperPanel);
+        fullPanel.add(lowerPanel);
+        add(fullPanel);
     }
 
     private JComponent createRequestEditorPanel() {
