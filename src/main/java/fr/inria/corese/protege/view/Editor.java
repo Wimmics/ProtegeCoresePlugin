@@ -2,10 +2,8 @@ package fr.inria.corese.protege.view;
 
 import java.awt.*;
 import java.awt.event.ActionListener;
-import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 
 import fr.inria.corese.core.Graph;
@@ -36,7 +34,7 @@ public class Editor extends JPanel {
 
     private JTextArea constraintsArea;
 
-    private JButton evaluateRequest = new JButton("Evaluate Request");
+    private JButton evaluateRequestButton = new JButton("Evaluate Request");
 
     private JTextArea resultComponent = new JTextArea(40, 120);
 
@@ -55,8 +53,33 @@ public class Editor extends JPanel {
         this.modelManager = modelManager;
 
         modelManager.addListener(modelListener);
-        evaluateRequest.addActionListener(refreshAction);
+        evaluateRequestButton.addActionListener(refreshAction);
 
+        JComponent editorPanel = createRequestEditorPanel();
+        JComponent constraintsPanel = createConstraintsPanel();
+
+
+        setLayout(new GridLayout(4, 1));
+
+//        add(requestScrollPane);
+//        add(new JScrollPane(constraintsArea));
+        add(editorPanel);
+        add(constraintsPanel);
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(evaluateRequestButton, CENTER);
+        add(buttonPanel);
+
+        tabbedPaneResults = new JTabbedPane();
+        tabbedPaneResults.add("Raw Results", new JScrollPane(resultComponent));
+        tableResults = new TableViewer();
+        JScrollPane tableScroll = new JScrollPane();
+        tableScroll.setViewportView(tableResults);
+        tabbedPaneResults.add("Table Results", tableScroll);
+        add(tabbedPaneResults);
+    }
+
+    private JComponent createRequestEditorPanel() {
         requestArea = new SparqlQueryEditor();
         requestArea.setQueryText("select * where {" +
                 "  ?s ?p ?o" +
@@ -69,6 +92,14 @@ public class Editor extends JPanel {
 //                "   bind (xt:turtle(?g) as ?t)\n" +
 //                "}" );
         requestArea.setFont(new Font("Serif", Font.ITALIC, 16));
+        JLabel requestLabel = new JLabel("SPARQL Request");
+        requestLabel.setLabelFor(requestArea);
+        JScrollPane requestScrollPane = new JScrollPane();
+        requestScrollPane.setViewportView(requestArea);
+        return requestScrollPane;
+    }
+
+    private JComponent createConstraintsPanel() {
         constraintsArea = new JTextArea(10,80);
         constraintsArea.setText("@prefix pizza: <http://www.co-ode.org/ontologies/pizza/pizza.owl#> .\n"+
                 "@prefix sh: <http://www.w3.org/ns/shacl#> .\n" +
@@ -85,24 +116,16 @@ public class Editor extends JPanel {
         constraintsArea.setFont(new Font("Serif", Font.ITALIC, 16));
         constraintsArea.setLineWrap(true);
         constraintsArea.setWrapStyleWord(true);
-
-        add(new JScrollPane(requestArea), NORTH);
-        add(new JScrollPane(constraintsArea), CENTER);
-        add(new JScrollPane(evaluateRequest), SOUTH);
-
-        tabbedPaneResults = new JTabbedPane();
-        tabbedPaneResults.add("Raw Results", new JScrollPane(resultComponent));
-        tableResults = new TableViewer();
-        JScrollPane tableScroll = new JScrollPane();
-        tableScroll.setViewportView(tableResults);
-        tabbedPaneResults.add("Table Results", tableScroll);
-
-        add(tabbedPaneResults, SOUTH);
+        JLabel constraintsLabel = new JLabel("SHACL Constraints");
+        constraintsLabel.setLabelFor(constraintsArea);
+        JScrollPane constraintsScrollPane = new JScrollPane();
+        constraintsScrollPane.setViewportView(constraintsArea);
+        return constraintsScrollPane;
     }
 
     public void dispose() {
         modelManager.removeListener(modelListener);
-        evaluateRequest.removeActionListener(refreshAction);
+        evaluateRequestButton.removeActionListener(refreshAction);
     }
 
     private void recalculate() {
