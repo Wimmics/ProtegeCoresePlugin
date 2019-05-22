@@ -2,8 +2,12 @@ package fr.inria.corese.protege.view;
 
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Set;
 
 
 import fr.inria.corese.core.Graph;
@@ -21,6 +25,9 @@ import org.protege.editor.owl.model.event.OWLModelManagerListener;
 import org.semanticweb.owlapi.formats.TurtleDocumentFormat;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;
+import org.semarglproject.vocab.OWL;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 
@@ -28,13 +35,14 @@ import static java.awt.BorderLayout.*;
 
 
 public class Editor extends JPanel {
-    private final JTabbedPane tabbedPaneResults;
-    private final TableViewer tableResults;
+    private Logger logger = LoggerFactory.getLogger(Editor.class);
+    private JTabbedPane tabbedPaneResults;
+    private TableViewer tableResults;
     private SparqlQueryEditor requestArea;
 
     private JTextArea constraintsArea;
 
-    private JButton evaluateRequestButton = new JButton("Evaluate Request");
+    private JButton evaluateRequestButton;
 
     private JTextArea resultComponent = new JTextArea(40, 120);
 
@@ -52,8 +60,6 @@ public class Editor extends JPanel {
     public Editor(OWLModelManager modelManager) {
         this.modelManager = modelManager;
 
-        modelManager.addListener(modelListener);
-        evaluateRequestButton.addActionListener(refreshAction);
 
         JComponent editorPanel = createRequestEditorPanel();
         JComponent constraintsPanel = createConstraintsPanel();
@@ -63,24 +69,87 @@ public class Editor extends JPanel {
         upperPanel.add(constraintsPanel);
         add(upperPanel);
 
+        JComponent buttonsPanel = createButtonsPanel();
+        modelManager.addListener(modelListener);
+        evaluateRequestButton.addActionListener(refreshAction);
+
+        JComponent resultsPanel = createResultsPanel();
+
         JPanel lowerPanel = new JPanel();
         lowerPanel.setLayout(new BorderLayout());
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.add(evaluateRequestButton, CENTER);
-        lowerPanel.add(buttonPanel, NORTH);
+        lowerPanel.add(buttonsPanel, NORTH);
+        lowerPanel.add(resultsPanel, CENTER);
 
+        JSplitPane fullPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        fullPanel.add(upperPanel);
+        fullPanel.add(lowerPanel);
+        add(fullPanel);
+    }
+
+    private JComponent createResultsPanel() {
         tabbedPaneResults = new JTabbedPane();
         tabbedPaneResults.add("Raw Results", new JScrollPane(resultComponent));
         tableResults = new TableViewer();
         JScrollPane tableScroll = new JScrollPane();
         tableScroll.setViewportView(tableResults);
         tabbedPaneResults.add("Table Results", tableScroll);
-        lowerPanel.add(tabbedPaneResults, CENTER);
+        return tabbedPaneResults;
+    }
 
-        JSplitPane fullPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        fullPanel.add(upperPanel);
-        fullPanel.add(lowerPanel);
-        add(fullPanel);
+    private JComponent createButtonsPanel() {
+        JPanel buttonPanel = new JPanel(new GridLayout(0, 1));
+
+        // Begin of upper part
+        evaluateRequestButton = new JButton("Evaluate Request");
+        JPanel upperPart = new JPanel();
+        upperPart.add(evaluateRequestButton);
+        //End of upper part
+
+        // Begin to build the ontology panel.
+        JRadioButton activeOntology = new JRadioButton("Active Ontology");
+        activeOntology.setToolTipText(modelManager.getActiveOntology().getOntologyID().toString());
+        JRadioButton activeOntologies = new JRadioButton("Select Among Active Ontologies");
+
+        ButtonGroup activeOntologiesButtonGroup = new ButtonGroup();
+        activeOntologiesButtonGroup.add(activeOntologies);
+        activeOntologiesButtonGroup.add(activeOntology);
+
+        JPanel activeOntologiesPanel = new JPanel(new GridLayout(0, 1));
+        activeOntologiesPanel.add(activeOntologies);
+        activeOntologiesPanel.setBorder(BorderFactory.createLineBorder(Color.black));
+
+        JPanel ontologiesPanel = new JPanel(new GridLayout(0, 1));
+        ArrayList<JCheckBox> checkboxes = new ArrayList<>();
+        for (OWLOntology ontology : modelManager.getActiveOntologies()) {
+            JCheckBox checkbox = new JCheckBox(ontology.getOntologyID().toString());
+            checkbox.setEnabled(false);
+            checkboxes.add(checkbox);
+            ontologiesPanel.add(new JPanel());
+            ontologiesPanel.add(checkbox);
+        }
+
+        activeOntologiesPanel.add(ontologiesPanel);
+        activeOntologies.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    for (JCheckBox checkbox : checkboxes) {
+                        checkbox.setEnabled(true);
+                    }
+                } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+                    for (JCheckBox checkbox : checkboxes) {
+                        checkbox.setEnabled(true);
+                    }
+                }
+            }
+        });
+
+        buttonPanel.add(upperPart);
+        buttonPanel.add(activeOntologiesPanel);
+        buttonPanel.add(activeOntology);
+        // End of building the ontology panel.
+
+        return buttonPanel;
     }
 
     private JComponent createRequestEditorPanel() {
@@ -104,8 +173,8 @@ public class Editor extends JPanel {
     }
 
     private JComponent createConstraintsPanel() {
-        constraintsArea = new JTextArea(10,80);
-        constraintsArea.setText("@prefix pizza: <http://www.co-ode.org/ontologies/pizza/pizza.owl#> .\n"+
+        constraintsArea = new JTextArea(10, 80);
+        constraintsArea.setText("@prefix pizza: <http://www.co-ode.org/ontologies/pizza/pizza.owl#> .\n" +
                 "@prefix sh: <http://www.w3.org/ns/shacl#> .\n" +
                 "@prefix us: <http://www.corese.inria.fr/user#> .\n" +
                 "\n" +
@@ -136,8 +205,12 @@ public class Editor extends JPanel {
         String fileName = "/Users/edemairy/tmp/ontology.ttl";
         String constraintsFileName = "/Users/edemairy/tmp/constraints_shacl.ttl";
 
+        Set<OWLOntology> ontologies = modelManager.getActiveOntologies();
+        for (OWLOntology ontology : ontologies) {
+            logger.info("Ontology ID: {}", ontology.getOntologyID());
+        }
         // Save the Protégé ontology in fileName so that it can be read by Corese.
-        OWLOntology ontology = this.modelManager.getActiveOntology();
+        OWLOntology ontology = modelManager.getActiveOntology();
         try (FileOutputStream fr = new FileOutputStream(fileName)) {
             ontology.saveOntology(new TurtleDocumentFormat(), fr);
         } catch (IOException | OWLOntologyStorageException e) {
@@ -172,7 +245,7 @@ public class Editor extends JPanel {
             e.printStackTrace();
         }
         ResultFormat f1 = ResultFormat.create(map);
-        System.err.println("Result = "+f1);
+        System.err.println("Result = " + f1);
         tableResults.setMappings(map);
         tableResults.updateModel();
         tableResults.invalidate();
