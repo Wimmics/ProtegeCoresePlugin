@@ -61,16 +61,6 @@
 			<artifactId>slf4j-api</artifactId>
 			<version>1.7.26</version>
 		</dependency>
-<!--&lt;!&ndash;		<dependency>&ndash;&gt;-->
-<!--			<groupId>org.slf4j</groupId>-->
-<!--			<artifactId>slf4j-api</artifactId>-->
-<!--			<version>${slf4j.version}</version>-->
-<!--		</dependency>-->
-<!--		<dependency>-->
-<!--			<groupId>org.slf4j</groupId>-->
-<!--			<artifactId>slf4j-simple</artifactId>-->
-<!--			<version>${slf4j.version}</version>-->
-<!--		</dependency>-->
 	</dependencies>
 
 	<build>
@@ -155,6 +145,7 @@
 							!*
 						</Import-Package>
 						<Embed-Dependency>slf4j-api,logback-core,corese-gui,xml-apis;inline=true</Embed-Dependency>
+						<_include>src/main/resources/META-INF/MANIFEST.MF</_include>
 					</instructions>
 				</configuration>
 			</plugin>

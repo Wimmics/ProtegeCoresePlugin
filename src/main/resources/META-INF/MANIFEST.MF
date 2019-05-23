@@ -1,0 +1,1 @@
+Update-Url: http://localhost:8010/corese.plugin-0.1.0-SNAPSHOT.jar
