@@ -8,6 +8,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 import fr.inria.corese.core.Graph;
@@ -44,7 +46,7 @@ public class Editor extends JPanel {
 
     private JButton evaluateRequestButton;
 
-    private JTextArea resultComponent = new JTextArea(40, 120);
+    private JTextArea resultComponent;
 
     private OWLModelManager modelManager;
 
@@ -56,6 +58,9 @@ public class Editor extends JPanel {
             recalculate();
         }
     };
+    private JRadioButton activeOntology;
+    private JRadioButton ontologies;
+    private ArrayList<JCheckBox> ontologiesChoice;
 
     public Editor(OWLModelManager modelManager) {
         this.modelManager = modelManager;
@@ -76,24 +81,26 @@ public class Editor extends JPanel {
         JComponent resultsPanel = createResultsPanel();
 
         JPanel lowerPanel = new JPanel();
-        lowerPanel.setLayout(new BorderLayout());
-        lowerPanel.add(buttonsPanel, NORTH);
-        lowerPanel.add(resultsPanel, CENTER);
+        lowerPanel.setLayout(new GridLayout(0,1));
+        lowerPanel.add(buttonsPanel);
+        lowerPanel.add(resultsPanel);
 
-        JSplitPane fullPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        fullPanel.add(upperPanel);
-        fullPanel.add(lowerPanel);
+        JSplitPane fullPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, upperPanel, lowerPanel);
         add(fullPanel);
     }
 
     private JComponent createResultsPanel() {
         tabbedPaneResults = new JTabbedPane();
+        resultComponent = new JTextArea();
         tabbedPaneResults.add("Raw Results", new JScrollPane(resultComponent));
         tableResults = new TableViewer();
         JScrollPane tableScroll = new JScrollPane();
         tableScroll.setViewportView(tableResults);
         tabbedPaneResults.add("Table Results", tableScroll);
-        return tabbedPaneResults;
+        JPanel result = new JPanel();
+        result.setLayout(new BorderLayout());
+        result.add(tabbedPaneResults);
+        return result;
     }
 
     private JComponent createButtonsPanel() {
@@ -106,38 +113,48 @@ public class Editor extends JPanel {
         //End of upper part
 
         // Begin to build the ontology panel.
-        JRadioButton activeOntology = new JRadioButton("Active Ontology");
+        activeOntology = new JRadioButton("Active Ontology");
+        activeOntology.setSelected(true);
         activeOntology.setToolTipText(modelManager.getActiveOntology().getOntologyID().toString());
-        JRadioButton activeOntologies = new JRadioButton("Select Among Active Ontologies");
 
+        ontologies = new JRadioButton("Select Among Active Ontologies");
         ButtonGroup activeOntologiesButtonGroup = new ButtonGroup();
-        activeOntologiesButtonGroup.add(activeOntologies);
+        activeOntologiesButtonGroup.add(ontologies);
         activeOntologiesButtonGroup.add(activeOntology);
 
-        JPanel activeOntologiesPanel = new JPanel(new GridLayout(0, 1));
-        activeOntologiesPanel.add(activeOntologies);
-        activeOntologiesPanel.setBorder(BorderFactory.createLineBorder(Color.black));
-
         JPanel ontologiesPanel = new JPanel(new GridLayout(0, 1));
-        ArrayList<JCheckBox> checkboxes = new ArrayList<>();
-        for (OWLOntology ontology : modelManager.getActiveOntologies()) {
-            JCheckBox checkbox = new JCheckBox(ontology.getOntologyID().toString());
+        ontologiesPanel.add(ontologies);
+        ontologiesPanel.setBorder(BorderFactory.createLineBorder(Color.black));
+
+        JPanel ontologiesChoicePanel = new JPanel(new GridLayout(0, 1));
+        ontologiesChoice = new ArrayList<>();
+        for (OWLOntology ontology : modelManager.getOntologies()) {
+            String ontologyShortName = ontology.getOntologyID().toString();
+            Pattern splitter = Pattern.compile(".*OntologyIRI\\(([^)]*)\\).*");
+            Matcher m = splitter.matcher(ontologyShortName);
+            if (m.find()) {
+                ontologyShortName = m.group(1);
+            } else {
+                ontologyShortName = ontologyShortName.substring(ontologyShortName.length()-25, ontologyShortName.length()-1);
+            }
+            JCheckBox checkbox = new JCheckBox(ontologyShortName);
+            checkbox.setToolTipText(ontology.getOntologyID().toString());
+            checkbox.setActionCommand(ontology.getOntologyID().toString());
             checkbox.setEnabled(false);
-            checkboxes.add(checkbox);
-            ontologiesPanel.add(new JPanel());
-            ontologiesPanel.add(checkbox);
+            ontologiesChoice.add(checkbox);
+            ontologiesChoicePanel.add(checkbox);
         }
 
-        activeOntologiesPanel.add(ontologiesPanel);
-        activeOntologies.addItemListener(new ItemListener() {
+        ontologiesPanel.add(ontologiesChoicePanel);
+        ontologies.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
                 if (e.getStateChange() == ItemEvent.SELECTED) {
-                    for (JCheckBox checkbox : checkboxes) {
+                    for (JCheckBox checkbox : ontologiesChoice) {
                         checkbox.setEnabled(true);
                     }
                 } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                    for (JCheckBox checkbox : checkboxes) {
+                    for (JCheckBox checkbox : ontologiesChoice) {
                         checkbox.setEnabled(true);
                     }
                 }
@@ -145,7 +162,7 @@ public class Editor extends JPanel {
         });
 
         buttonPanel.add(upperPart);
-        buttonPanel.add(activeOntologiesPanel);
+        buttonPanel.add(ontologiesPanel);
         buttonPanel.add(activeOntology);
         // End of building the ontology panel.
 
@@ -173,7 +190,7 @@ public class Editor extends JPanel {
     }
 
     private JComponent createConstraintsPanel() {
-        constraintsArea = new JTextArea(10, 80);
+        constraintsArea = new JTextArea();
         constraintsArea.setText("@prefix pizza: <http://www.co-ode.org/ontologies/pizza/pizza.owl#> .\n" +
                 "@prefix sh: <http://www.w3.org/ns/shacl#> .\n" +
                 "@prefix us: <http://www.corese.inria.fr/user#> .\n" +
@@ -202,40 +219,12 @@ public class Editor extends JPanel {
     }
 
     private void recalculate() {
-        String fileName = "/Users/edemairy/tmp/ontology.ttl";
-        String constraintsFileName = "/Users/edemairy/tmp/constraints_shacl.ttl";
-
-        Set<OWLOntology> ontologies = modelManager.getActiveOntologies();
-        for (OWLOntology ontology : ontologies) {
-            logger.info("Ontology ID: {}", ontology.getOntologyID());
-        }
-        // Save the Protégé ontology in fileName so that it can be read by Corese.
-        OWLOntology ontology = modelManager.getActiveOntology();
-        try (FileOutputStream fr = new FileOutputStream(fileName)) {
-            ontology.saveOntology(new TurtleDocumentFormat(), fr);
-        } catch (IOException | OWLOntologyStorageException e) {
-            e.printStackTrace();
-        }
-
-        // Saving constraints to file
-        try (FileOutputStream fr = new FileOutputStream(constraintsFileName)) {
-            fr.write(constraintsArea.getText().getBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
         Graph graph = Graph.create();
         Load ld = Load.create(graph);
-        try {
-            ld.parse(fileName);
-        } catch (LoadException e) {
-            e.printStackTrace();
-        }
-        try {
-            ld.parse(constraintsFileName);
-        } catch (LoadException e) {
-            e.printStackTrace();
-        }
+
+        readOntologiesInCorese(ld);
+        readShaclConstraintsInCorese(ld);
+
         QueryProcess exec = QueryProcess.create(graph);
         String query = requestArea.getTextPaneQuery().getText();
         Mappings map = null;
@@ -250,5 +239,57 @@ public class Editor extends JPanel {
         tableResults.updateModel();
         tableResults.invalidate();
         resultComponent.setText("Result = \n" + f1);
+    }
+
+    private void readShaclConstraintsInCorese(Load ld) {
+        String constraintsFileName = "/Users/edemairy/tmp/constraints_shacl.ttl";
+        // Begin of reading constraints
+        try (FileOutputStream fr = new FileOutputStream(constraintsFileName)) {
+            fr.write(constraintsArea.getText().getBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            ld.parse(constraintsFileName);
+        } catch (LoadException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void readOntologiesInCorese(Load ld) {
+        ArrayList<OWLOntology> ontologiesToRead = new ArrayList<>();
+        if (activeOntology.isSelected()) {
+            ontologiesToRead.add(modelManager.getActiveOntology());
+        } else if (ontologies.isSelected()) {
+            for (JCheckBox choice: ontologiesChoice) {
+                if (choice.isEnabled()) {
+                    Set<OWLOntology> ontologies = modelManager.getOntologies();
+                    String ontologyId = choice.getActionCommand();
+                    for (OWLOntology ontology: ontologies) {
+                        if (ontology.getOntologyID().toString().equals(ontologyId)) {
+                            ontologiesToRead.add(ontology);
+                        }
+                    }
+                }
+            }
+        }
+        // Save the Protégé ontology in fileName so that it can be read by Corese.
+        if (ontologiesToRead.isEmpty()) {
+            logger.warn("No ontology to read!");
+        }
+        String fileName = "/Users/edemairy/tmp/ontology.ttl";
+        for (OWLOntology ontology: ontologiesToRead) {
+            logger.info("Reading ontology {}", ontology.getOntologyID());
+            try (FileOutputStream fr = new FileOutputStream(fileName)) {
+                ontology.saveOntology(new TurtleDocumentFormat(), fr);
+            } catch (IOException | OWLOntologyStorageException e) {
+                e.printStackTrace();
+            }
+            try {
+                ld.parse(fileName);
+            } catch (LoadException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
