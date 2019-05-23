@@ -1,17 +1,5 @@
 package fr.inria.corese.protege.view;
 
-import java.awt.*;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-
 import fr.inria.corese.core.Graph;
 import fr.inria.corese.core.load.Load;
 import fr.inria.corese.core.load.LoadException;
@@ -19,27 +7,40 @@ import fr.inria.corese.core.print.ResultFormat;
 import fr.inria.corese.core.query.QueryProcess;
 import fr.inria.corese.gui.query.SparqlQueryEditor;
 import fr.inria.corese.kgram.core.Mappings;
+import fr.inria.corese.protege.mappingsviewer.GraphViewer;
+import fr.inria.corese.protege.mappingsviewer.MappingsViewerInterface;
 import fr.inria.corese.protege.mappingsviewer.TableViewer;
 import fr.inria.corese.sparql.exceptions.EngineException;
 import org.protege.editor.owl.model.OWLModelManager;
 import org.protege.editor.owl.model.event.EventType;
 import org.protege.editor.owl.model.event.OWLModelManagerListener;
 import org.semanticweb.owlapi.formats.TurtleDocumentFormat;
+import org.semanticweb.owlapi.io.RDFTriple;
+import org.semanticweb.owlapi.model.OWLIndividual;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;
-import org.semarglproject.vocab.OWL;
+import org.semanticweb.owlapi.rdf.model.RDFTranslator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-
-import static java.awt.BorderLayout.*;
+import java.awt.*;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class Editor extends JPanel {
     private Logger logger = LoggerFactory.getLogger(Editor.class);
     private JTabbedPane tabbedPaneResults;
-    private TableViewer tableResults;
+    private final HashMap<String, MappingsViewerInterface> mappingsViewers = new HashMap<>();
     private SparqlQueryEditor requestArea;
 
     private JTextArea constraintsArea;
@@ -90,16 +91,27 @@ public class Editor extends JPanel {
     }
 
     private JComponent createResultsPanel() {
+
         tabbedPaneResults = new JTabbedPane();
         resultComponent = new JTextArea();
         tabbedPaneResults.add("Raw Results", new JScrollPane(resultComponent));
-        tableResults = new TableViewer();
-        JScrollPane tableScroll = new JScrollPane();
-        tableScroll.setViewportView(tableResults);
-        tabbedPaneResults.add("Table Results", tableScroll);
+
+        TableViewer tableResults = new TableViewer();
+        mappingsViewers.put("Table", tableResults);
+//        JScrollPane tableScroll = new JScrollPane();
+//        tableScroll.setViewportView(tableResults);
+
+        GraphViewer graphResults = new GraphViewer();
+        mappingsViewers.put("Graph", graphResults);
+        for (String viewerId: mappingsViewers.keySet()) {
+            tabbedPaneResults.add(viewerId, mappingsViewers.get(viewerId).getComponent());
+        }
+
         JPanel result = new JPanel();
         result.setLayout(new BorderLayout());
         result.add(tabbedPaneResults);
+
+
         return result;
     }
 
@@ -234,10 +246,10 @@ public class Editor extends JPanel {
             e.printStackTrace();
         }
         ResultFormat f1 = ResultFormat.create(map);
-        System.err.println("Result = " + f1);
-        tableResults.setMappings(map);
-        tableResults.updateModel();
-        tableResults.invalidate();
+        for (MappingsViewerInterface viewer: mappingsViewers.values()) {
+            viewer.setMappings(map);
+            viewer.updateModel();
+        }
         resultComponent.setText("Result = \n" + f1);
     }
 
@@ -279,6 +291,10 @@ public class Editor extends JPanel {
         }
         String fileName = "/Users/edemairy/tmp/ontology.ttl";
         for (OWLOntology ontology: ontologiesToRead) {
+//            RDFTranslator translator = new RDFTranslator(modelManager.getOWLOntologyManager(), ontology, true, OWLIndividual::isAnonymous);
+//            for (RDFTriple triple: translator.getGraph().getAllTriples()) {
+//                logger.info("triple = {}", triple.toString());
+//            }
             logger.info("Reading ontology {}", ontology.getOntologyID());
             try (FileOutputStream fr = new FileOutputStream(fileName)) {
                 ontology.saveOntology(new TurtleDocumentFormat(), fr);

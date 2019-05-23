@@ -13,7 +13,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.util.List;
 
-public class TableViewer extends JTable {
+public class TableViewer extends JTable implements MappingsViewerInterface {
     private static final Logger logger = LogManager.getLogger(TableViewer.class.getName());
     private final int MAXRES = 10000;
     private Mappings mappings;
@@ -25,10 +25,12 @@ public class TableViewer extends JTable {
         this.setFillsViewportHeight(true);
     }
 
+    @Override
     public void setMappings(Mappings mappings) {
         this.mappings = mappings;
     }
 
+    @Override
     public void updateModel() {
         Query q = mappings.getQuery();
         List<Node> vars = q.getSelect();
@@ -68,6 +70,12 @@ public class TableViewer extends JTable {
 
         setModel(model);
     }
+
+    @Override
+    public JComponent getComponent() {
+        return this;
+    }
+
     String pretty(IDatatype dt) {
         if (dt.isList()) {
             return dt.getValues().toString();
