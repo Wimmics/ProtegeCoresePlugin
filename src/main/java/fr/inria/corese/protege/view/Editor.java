@@ -8,6 +8,7 @@ import fr.inria.corese.core.query.QueryProcess;
 import fr.inria.corese.gui.query.SparqlQueryEditor;
 import fr.inria.corese.kgram.core.Mappings;
 import fr.inria.corese.protege.mappingsviewer.GraphViewer;
+import fr.inria.corese.protege.mappingsviewer.TreeViewer;
 import fr.inria.corese.protege.mappingsviewer.MappingsViewerInterface;
 import fr.inria.corese.protege.mappingsviewer.TableViewer;
 import fr.inria.corese.sparql.exceptions.EngineException;
@@ -15,11 +16,8 @@ import org.protege.editor.owl.model.OWLModelManager;
 import org.protege.editor.owl.model.event.EventType;
 import org.protege.editor.owl.model.event.OWLModelManagerListener;
 import org.semanticweb.owlapi.formats.TurtleDocumentFormat;
-import org.semanticweb.owlapi.io.RDFTriple;
-import org.semanticweb.owlapi.model.OWLIndividual;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;
-import org.semanticweb.owlapi.rdf.model.RDFTranslator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +64,6 @@ public class Editor extends JPanel {
     public Editor(OWLModelManager modelManager) {
         this.modelManager = modelManager;
 
-
         JComponent editorPanel = createRequestEditorPanel();
         JComponent constraintsPanel = createConstraintsPanel();
 
@@ -81,8 +78,7 @@ public class Editor extends JPanel {
 
         JComponent resultsPanel = createResultsPanel();
 
-        JPanel lowerPanel = new JPanel();
-        lowerPanel.setLayout(new GridLayout(0,1));
+        JSplitPane lowerPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         lowerPanel.add(buttonsPanel);
         lowerPanel.add(resultsPanel);
 
@@ -101,22 +97,21 @@ public class Editor extends JPanel {
 //        JScrollPane tableScroll = new JScrollPane();
 //        tableScroll.setViewportView(tableResults);
 
+        TreeViewer treeResults = new TreeViewer();
+        mappingsViewers.put("Tree", treeResults);
+
         GraphViewer graphResults = new GraphViewer();
         mappingsViewers.put("Graph", graphResults);
+
         for (String viewerId: mappingsViewers.keySet()) {
             tabbedPaneResults.add(viewerId, mappingsViewers.get(viewerId).getComponent());
         }
 
-        JPanel result = new JPanel();
-        result.setLayout(new BorderLayout());
-        result.add(tabbedPaneResults);
-
-
-        return result;
+        return tabbedPaneResults;
     }
 
     private JComponent createButtonsPanel() {
-        JPanel buttonPanel = new JPanel(new GridLayout(0, 1));
+        JPanel buttonPanel = new JPanel();
 
         // Begin of upper part
         evaluateRequestButton = new JButton("Evaluate Request");
@@ -138,7 +133,7 @@ public class Editor extends JPanel {
         ontologiesPanel.add(ontologies);
         ontologiesPanel.setBorder(BorderFactory.createLineBorder(Color.black));
 
-        JPanel ontologiesChoicePanel = new JPanel(new GridLayout(0, 1));
+        JPanel ontologiesChoicePanel = new JPanel();
         ontologiesChoice = new ArrayList<>();
         for (OWLOntology ontology : modelManager.getOntologies()) {
             String ontologyShortName = ontology.getOntologyID().toString();
