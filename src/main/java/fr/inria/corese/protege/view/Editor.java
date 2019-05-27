@@ -94,8 +94,6 @@ public class Editor extends JPanel {
 
         TableViewer tableResults = new TableViewer();
         mappingsViewers.put("Table", tableResults);
-//        JScrollPane tableScroll = new JScrollPane();
-//        tableScroll.setViewportView(tableResults);
 
         TreeViewer treeResults = new TreeViewer();
         mappingsViewers.put("Tree", treeResults);
@@ -103,7 +101,7 @@ public class Editor extends JPanel {
         GraphViewer graphResults = new GraphViewer();
         mappingsViewers.put("Graph", graphResults);
 
-        for (String viewerId: mappingsViewers.keySet()) {
+        for (String viewerId : mappingsViewers.keySet()) {
             tabbedPaneResults.add(viewerId, mappingsViewers.get(viewerId).getComponent());
         }
 
@@ -142,7 +140,7 @@ public class Editor extends JPanel {
             if (m.find()) {
                 ontologyShortName = m.group(1);
             } else {
-                ontologyShortName = ontologyShortName.substring(ontologyShortName.length()-25, ontologyShortName.length()-1);
+                ontologyShortName = ontologyShortName.substring(ontologyShortName.length() - 25, ontologyShortName.length() - 1);
             }
             JCheckBox checkbox = new JCheckBox(ontologyShortName);
             checkbox.setToolTipText(ontology.getOntologyID().toString());
@@ -153,17 +151,14 @@ public class Editor extends JPanel {
         }
 
         ontologiesPanel.add(ontologiesChoicePanel);
-        ontologies.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                if (e.getStateChange() == ItemEvent.SELECTED) {
-                    for (JCheckBox checkbox : ontologiesChoice) {
-                        checkbox.setEnabled(true);
-                    }
-                } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                    for (JCheckBox checkbox : ontologiesChoice) {
-                        checkbox.setEnabled(true);
-                    }
+        ontologies.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                for (JCheckBox checkbox : ontologiesChoice) {
+                    checkbox.setEnabled(true);
+                }
+            } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+                for (JCheckBox checkbox : ontologiesChoice) {
+                    checkbox.setEnabled(true);
                 }
             }
         });
@@ -178,7 +173,7 @@ public class Editor extends JPanel {
 
     private JComponent createRequestEditorPanel() {
         requestArea = new SparqlQueryEditor();
-        requestArea.setQueryText("select * where {" +
+        requestArea.setQueryText("construct { ?s ?p ?o } where {" +
                 "  ?s ?p ?o" +
                 "}");
 //        requestArea.setQueryText("# shape for shape\n" +
@@ -241,7 +236,7 @@ public class Editor extends JPanel {
             e.printStackTrace();
         }
         ResultFormat f1 = ResultFormat.create(map);
-        for (MappingsViewerInterface viewer: mappingsViewers.values()) {
+        for (MappingsViewerInterface viewer : mappingsViewers.values()) {
             viewer.setMappings(map);
             viewer.updateModel();
         }
@@ -268,11 +263,11 @@ public class Editor extends JPanel {
         if (activeOntology.isSelected()) {
             ontologiesToRead.add(modelManager.getActiveOntology());
         } else if (ontologies.isSelected()) {
-            for (JCheckBox choice: ontologiesChoice) {
+            for (JCheckBox choice : ontologiesChoice) {
                 if (choice.isEnabled()) {
                     Set<OWLOntology> ontologies = modelManager.getOntologies();
                     String ontologyId = choice.getActionCommand();
-                    for (OWLOntology ontology: ontologies) {
+                    for (OWLOntology ontology : ontologies) {
                         if (ontology.getOntologyID().toString().equals(ontologyId)) {
                             ontologiesToRead.add(ontology);
                         }
@@ -285,7 +280,7 @@ public class Editor extends JPanel {
             logger.warn("No ontology to read!");
         }
         String fileName = "/Users/edemairy/tmp/ontology.ttl";
-        for (OWLOntology ontology: ontologiesToRead) {
+        for (OWLOntology ontology : ontologiesToRead) {
 //            RDFTranslator translator = new RDFTranslator(modelManager.getOWLOntologyManager(), ontology, true, OWLIndividual::isAnonymous);
 //            for (RDFTriple triple: translator.getGraph().getAllTriples()) {
 //                logger.info("triple = {}", triple.toString());
