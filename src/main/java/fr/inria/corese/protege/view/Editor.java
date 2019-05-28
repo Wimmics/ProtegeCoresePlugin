@@ -8,10 +8,12 @@ import fr.inria.corese.core.query.QueryProcess;
 import fr.inria.corese.gui.query.SparqlQueryEditor;
 import fr.inria.corese.kgram.core.Mappings;
 import fr.inria.corese.protege.mappingsviewer.GraphViewer;
-import fr.inria.corese.protege.mappingsviewer.TreeViewer;
 import fr.inria.corese.protege.mappingsviewer.MappingsViewerInterface;
 import fr.inria.corese.protege.mappingsviewer.TableViewer;
+import fr.inria.corese.protege.mappingsviewer.TreeViewer;
 import fr.inria.corese.sparql.exceptions.EngineException;
+import org.protege.editor.core.Disposable;
+import org.protege.editor.core.ModelManager;
 import org.protege.editor.owl.model.OWLModelManager;
 import org.protege.editor.owl.model.event.EventType;
 import org.protege.editor.owl.model.event.OWLModelManagerListener;
@@ -25,7 +27,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -48,41 +49,36 @@ public class Editor extends JPanel {
     private JTextArea resultComponent;
 
     private OWLModelManager modelManager;
-
+    private JSplitPane fullPanel;
 
     private ActionListener refreshAction = e -> recalculate();
 
-    private OWLModelManagerListener modelListener = event -> {
-        if (event.getType() == EventType.ACTIVE_ONTOLOGY_CHANGED) {
-            recalculate();
-        }
-    };
+    private OWLModelManagerListener modelListener;
     private JRadioButton activeOntology;
     private JRadioButton ontologies;
     private ArrayList<JCheckBox> ontologiesChoice;
 
     public Editor(OWLModelManager modelManager) {
         this.modelManager = modelManager;
-
+        setLayout(new GridLayout(0, 1));
         JComponent editorPanel = createRequestEditorPanel();
         JComponent constraintsPanel = createConstraintsPanel();
 
-        JSplitPane upperPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        upperPanel.add(editorPanel);
-        upperPanel.add(constraintsPanel);
-        add(upperPanel);
+        JSplitPane upperPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, editorPanel, constraintsPanel);
 
         JComponent buttonsPanel = createButtonsPanel();
+        modelListener = event -> {
+            if (event.getType() == EventType.ACTIVE_ONTOLOGY_CHANGED) {
+                recalculate();
+            }
+        };
         modelManager.addListener(modelListener);
         evaluateRequestButton.addActionListener(refreshAction);
 
         JComponent resultsPanel = createResultsPanel();
+        JSplitPane lowerPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, buttonsPanel, resultsPanel);
 
-        JSplitPane lowerPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        lowerPanel.add(buttonsPanel);
-        lowerPanel.add(resultsPanel);
-
-        JSplitPane fullPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, upperPanel, lowerPanel);
+        fullPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, upperPanel, lowerPanel);
         add(fullPanel);
     }
 
@@ -173,9 +169,11 @@ public class Editor extends JPanel {
 
     private JComponent createRequestEditorPanel() {
         requestArea = new SparqlQueryEditor();
-        requestArea.setQueryText("construct { ?s ?p ?o } where {" +
-                "  ?s ?p ?o" +
-                "}");
+        requestArea.setQueryText("construct {\n" +
+                "?s ?p ?o \n" +
+                "} where {\n" +
+                "  ?s ?p ?o\n" +
+                "}\n");
 //        requestArea.setQueryText("# shape for shape\n" +
 //                "select *\n" +
 //                "where {\n" +
@@ -220,7 +218,7 @@ public class Editor extends JPanel {
         evaluateRequestButton.removeActionListener(refreshAction);
     }
 
-    private void recalculate() {
+    void recalculate() {
         Graph graph = Graph.create();
         Load ld = Load.create(graph);
 
@@ -297,5 +295,34 @@ public class Editor extends JPanel {
                 e.printStackTrace();
             }
         }
+    }
+
+    public static void main(String[] args) {
+//        SparqlQueryEditor requestArea = new SparqlQueryEditor();
+//        requestArea.setQueryText("construct { ?s ?p ?o } where {" +
+//                "  ?s ?p ?o" +
+//                "}");
+////        requestArea.setQueryText("# shape for shape\n" +
+////                "select *\n" +
+////                "where {\n" +
+////                "   #bind (xt:transformer(st:ds, true) as ?d)\n" +
+////                "   bind (xt:shapeGraph() as ?g)\n" +
+////                "   bind (xt:turtle(?g) as ?t)\n" +
+////                "}" );
+//        requestArea.setFont(new Font("Serif", Font.ITALIC, 16));
+//        JLabel requestLabel = new JLabel("SPARQL Request");
+//        requestLabel.setLabelFor(requestArea);
+//        JPanel panel = new JPanel(new BorderLayout());
+//
+//        panel.add(requestArea);
+
+        Editor e = new Editor(null);
+        JFrame frame = new JFrame("Panel");
+        frame.setLocation(200, 200);
+        frame.getContentPane().add(e);
+        frame.setSize(400, 400);
+        frame.setVisible(true);
+        frame.setResizable(true);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 }

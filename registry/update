@@ -1,5 +1,0 @@
-id=corese.plugin
-version=0.0.1
-download=http://localhost:8010/corese.plugin-0.1.0-SNAPSHOT.jar
-name=Corese SPARQL Plugin
-author=Wimmics Team, Inria
