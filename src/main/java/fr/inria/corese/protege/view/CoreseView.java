@@ -19,7 +19,7 @@ public class CoreseView extends AbstractOWLViewComponent {
 
         metricsComponent = new Editor(getOWLModelManager());
         add(metricsComponent, BorderLayout.CENTER);
-        log.info("Example View Component initialized");
+        log.info("CORESE Plugin initialized");
     }
 
     @Override

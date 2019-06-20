@@ -14,7 +14,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<slf4j.version>1.7.12</slf4j.version>
-		<plugindir>/Applications/Protégé.app/Contents/Java/plugins</plugindir>
+		<plugindir>/user/corby/home/Protege-5.5.0/plugins</plugindir>
 	</properties>
 
 	<dependencies>
