@@ -27,16 +27,18 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
 public class Editor extends JPanel {
+
     private Logger logger = LoggerFactory.getLogger(Editor.class);
     private JTabbedPane tabbedPaneResults;
     private final HashMap<String, MappingsViewerInterface> mappingsViewers = new HashMap<>();
@@ -169,11 +171,11 @@ public class Editor extends JPanel {
 
     private JComponent createRequestEditorPanel() {
         requestArea = new SparqlQueryEditor();
-        requestArea.setQueryText("construct {\n" +
-                "?s ?p ?o \n" +
-                "} where {\n" +
-                "  ?s ?p ?o\n" +
-                "}\n");
+        requestArea.setQueryText("construct {\n"
+                + "?s ?p ?o \n"
+                + "} where {\n"
+                + "  ?s ?p ?o\n"
+                + "}\n");
 //        requestArea.setQueryText("# shape for shape\n" +
 //                "select *\n" +
 //                "where {\n" +
@@ -191,17 +193,17 @@ public class Editor extends JPanel {
 
     private JComponent createConstraintsPanel() {
         constraintsArea = new JTextArea();
-        constraintsArea.setText("@prefix pizza: <http://www.co-ode.org/ontologies/pizza/pizza.owl#> .\n" +
-                "@prefix sh: <http://www.w3.org/ns/shacl#> .\n" +
-                "@prefix us: <http://www.corese.inria.fr/user#> .\n" +
-                "\n" +
-                "us:test a sh:NodeShape; \n" +
-                "sh:targetClass pizza:Pizza;\n" +
-                "sh:property [\n" +
-                "    sh:path pizza:hasTopping;\n" +
-                "    sh:minCount 1;\n" +
-                "    sh:class pizza:OliveTopping\n" +
-                "] .");
+        constraintsArea.setText("@prefix pizza: <http://www.co-ode.org/ontologies/pizza/pizza.owl#> .\n"
+                + "@prefix sh: <http://www.w3.org/ns/shacl#> .\n"
+                + "@prefix us: <http://www.corese.inria.fr/user#> .\n"
+                + "\n"
+                + "us:test a sh:NodeShape; \n"
+                + "sh:targetClass pizza:Pizza;\n"
+                + "sh:property [\n"
+                + "    sh:path pizza:hasTopping;\n"
+                + "    sh:minCount 1;\n"
+                + "    sh:class pizza:OliveTopping\n"
+                + "] .");
 
         constraintsArea.setFont(new Font("Serif", Font.ITALIC, 16));
         constraintsArea.setLineWrap(true);
@@ -242,17 +244,22 @@ public class Editor extends JPanel {
     }
 
     private void readShaclConstraintsInCorese(Load ld) {
-        String constraintsFileName = "/Users/edemairy/tmp/constraints_shacl.ttl";
-        // Begin of reading constraints
-        try (FileOutputStream fr = new FileOutputStream(constraintsFileName)) {
-            fr.write(constraintsArea.getText().getBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         try {
-            ld.parse(constraintsFileName);
-        } catch (LoadException e) {
-            e.printStackTrace();
+            File constraintsTempFile = File.createTempFile("constraints_shacl", ".ttl");
+            String constraintsFileName = constraintsTempFile.getAbsolutePath();
+            // Begin of reading constraints
+            try ( FileOutputStream fr = new FileOutputStream(constraintsFileName)) {
+                fr.write(constraintsArea.getText().getBytes());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                ld.parse(constraintsFileName);
+            } catch (LoadException e) {
+                e.printStackTrace();
+            }
+        } catch (IOException ex) {
+            java.util.logging.Logger.getLogger(Editor.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -277,23 +284,30 @@ public class Editor extends JPanel {
         if (ontologiesToRead.isEmpty()) {
             logger.warn("No ontology to read!");
         }
-        String fileName = "/Users/edemairy/tmp/ontology.ttl";
-        for (OWLOntology ontology : ontologiesToRead) {
+        File rdfDataFile;
+        try {
+            rdfDataFile = File.createTempFile("ontology", ".ttl");
+
+            String fileName = rdfDataFile.getAbsolutePath();
+            for (OWLOntology ontology : ontologiesToRead) {
 //            RDFTranslator translator = new RDFTranslator(modelManager.getOWLOntologyManager(), ontology, true, OWLIndividual::isAnonymous);
 //            for (RDFTriple triple: translator.getGraph().getAllTriples()) {
 //                logger.info("triple = {}", triple.toString());
 //            }
-            logger.info("Reading ontology {}", ontology.getOntologyID());
-            try (FileOutputStream fr = new FileOutputStream(fileName)) {
-                ontology.saveOntology(new TurtleDocumentFormat(), fr);
-            } catch (IOException | OWLOntologyStorageException e) {
-                e.printStackTrace();
+                logger.info("Reading ontology {}", ontology.getOntologyID());
+                try ( FileOutputStream fr = new FileOutputStream(fileName)) {
+                    ontology.saveOntology(new TurtleDocumentFormat(), fr);
+                } catch (IOException | OWLOntologyStorageException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    ld.parse(fileName);
+                } catch (LoadException e) {
+                    e.printStackTrace();
+                }
             }
-            try {
-                ld.parse(fileName);
-            } catch (LoadException e) {
-                e.printStackTrace();
-            }
+        } catch (IOException ex) {
+            java.util.logging.Logger.getLogger(Editor.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
