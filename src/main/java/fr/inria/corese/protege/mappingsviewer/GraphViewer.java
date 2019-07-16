@@ -13,7 +13,6 @@ import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.ui.layout.springbox.implementations.LinLog;
 import org.graphstream.ui.swingViewer.View;
 import org.graphstream.ui.swingViewer.Viewer;
-import org.slf4j.Logger;
 
 import javax.swing.*;
 import java.awt.*;
@@ -32,6 +31,8 @@ public class GraphViewer extends JPanel implements MappingsViewerInterface {
     private JScrollPane scrollPaneTreeResult = new JScrollPane();
     private String stylesheet = "";
     private String DEFAULT_STYLESHEET = "";
+    private JSplitPane jpGraph;
+    private boolean firstDisplay = true;
     final private String DEFAULT_STYLESHEET_FILENAME = "/style/default_style.css";
 
     public GraphViewer() {
@@ -43,13 +44,13 @@ public class GraphViewer extends JPanel implements MappingsViewerInterface {
             logger.warn("Impossible to read the default style file. Reason: {}", e.toString());
         }
         stylesheet = DEFAULT_STYLESHEET;
+
+
     }
 
     @Override
     public void setMappings(Mappings mappings) {
         this.mappings = mappings;
-
-
     }
 
     @Override
@@ -92,11 +93,17 @@ public class GraphViewer extends JPanel implements MappingsViewerInterface {
         JScrollPane jsStyleGraph = new JScrollPane();
         jsStyleGraph.setViewportView(panelStyleGraph);
 
-        final JSplitPane jpGraph = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, jsStyleGraph, sgr);
-        jpGraph.setContinuousLayout(true);
-        scrollPaneTreeResult.setViewportView(jpGraph);
+        if (firstDisplay) {
+            firstDisplay = false;
+            jpGraph = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, jsStyleGraph, sgr);
+            jpGraph.setContinuousLayout(true);
+            scrollPaneTreeResult.setViewportView(jpGraph);
 
-        add(jpGraph);
+            add(jpGraph);
+        } else {
+            jpGraph.setRightComponent(sgr);
+            jpGraph.setLeftComponent(jsStyleGraph);
+        }
     }
 
     private MultiGraph create(fr.inria.corese.core.Graph g, NSManager nsm) {
