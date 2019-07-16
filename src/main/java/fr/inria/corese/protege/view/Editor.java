@@ -138,7 +138,7 @@ public class Editor extends JPanel {
             if (m.find()) {
                 ontologyShortName = m.group(1);
             } else {
-                ontologyShortName = ontologyShortName.substring(ontologyShortName.length() - 25, ontologyShortName.length() - 1);
+                ontologyShortName = ontologyShortName.substring(Math.max(0,ontologyShortName.length() - 25), ontologyShortName.length() - 1);
             }
             JCheckBox checkbox = new JCheckBox(ontologyShortName);
             checkbox.setToolTipText(ontology.getOntologyID().toString());
